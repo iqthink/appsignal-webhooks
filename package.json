@@ -8,7 +8,6 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "@37signals/basecamp": "^0.7.3",
     "hono": "^4.12.30"
   },
   "devDependencies": {
