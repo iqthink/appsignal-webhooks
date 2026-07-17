@@ -1,22 +1,25 @@
+import { createBasecampClient, isErrorCode } from '@37signals/basecamp'
+import type { Card } from '@37signals/basecamp'
 import type { Bindings } from './types'
 
 /**
- * Basecamp OAuth2 + Card Tables API client.
+ * Basecamp OAuth2 token lifecycle + API access.
+ *
+ * API calls go through the official SDK (@37signals/basecamp). The OAuth web
+ * flow stays hand-rolled: the SDK's interactive login targets CLIs (local
+ * callback server), while this Worker authorizes once via /auth and keeps
+ * tokens in KV, refreshing them before the 2-week expiry.
  * https://github.com/basecamp/bc-api/blob/master/sections/authentication.md
- * https://github.com/basecamp/bc-api/blob/master/sections/card_table_cards.md
  */
 
 const LAUNCHPAD = 'https://launchpad.37signals.com'
 const USER_AGENT = 'AppSignal Webhooks (ed@iqthink.com)'
 const TOKENS_KEY = 'basecamp:tokens'
-
-/** Refresh when the access token has less than a day left of its 2-week lifetime */
 const REFRESH_MARGIN_MS = 24 * 60 * 60 * 1000
 
 type StoredTokens = {
   access_token: string
   refresh_token: string
-  /** Unix ms timestamp when the access token expires */
   expires_at: number
 }
 
@@ -95,35 +98,21 @@ async function getAccessToken(env: Bindings, forceRefresh = false): Promise<stri
   return tokens.access_token
 }
 
-export type CreatedCard = {
-  id: number
-  title: string
-  app_url: string
+function client(env: Bindings, accessToken: string) {
+  return createBasecampClient({ accountId: env.BASECAMP_ACCOUNT_ID, accessToken })
 }
 
 export async function createCard(
   env: Bindings,
   card: { title: string; content: string }
-): Promise<CreatedCard> {
-  const url = `https://3.basecampapi.com/${env.BASECAMP_ACCOUNT_ID}/buckets/${env.BASECAMP_BUCKET_ID}/card_tables/lists/${env.BASECAMP_COLUMN_ID}/cards.json`
-
-  const attempt = async (accessToken: string) =>
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'User-Agent': USER_AGENT,
-      },
-      body: JSON.stringify(card),
-    })
-
-  let res = await attempt(await getAccessToken(env))
-  if (res.status === 401) {
-    res = await attempt(await getAccessToken(env, true))
+): Promise<Card> {
+  const columnId = Number(env.BASECAMP_COLUMN_ID)
+  try {
+    return await client(env, await getAccessToken(env)).cards.create(columnId, card)
+  } catch (err) {
+    if (isErrorCode(err, 'auth_required')) {
+      return client(env, await getAccessToken(env, true)).cards.create(columnId, card)
+    }
+    throw err
   }
-  if (!res.ok) {
-    throw new Error(`Basecamp card creation failed (${res.status}): ${await res.text()}`)
-  }
-  return res.json()
 }

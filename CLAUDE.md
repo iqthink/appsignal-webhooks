@@ -41,11 +41,21 @@ key. Ordering matters: the dedupe key (`dedupe:{site}:{env}:{number}`, 7-day TTL
 is written only after the card is created, so a failed Basecamp call stays
 retryable.
 
-Basecamp auth (src/basecamp.ts): OAuth2 against launchpad.37signals.com, tokens
-stored in KV under `basecamp:tokens`. Access tokens live 2 weeks; refreshed
-lazily when <24h remain, plus one forced refresh + retry on a 401. The one-time
-bootstrap is `GET /auth?key=<SETUP_KEY>` → `/auth/callback` (CSRF state kept in
-KV). If KV ever loses the tokens, re-run that flow; the SETUP_KEY secret guards it.
+Basecamp access (src/basecamp.ts): API calls go through the official SDK
+(`@37signals/basecamp`, fetch-based, retries 429/503 with backoff), created per
+request with the current access token; a thrown `auth_required` error triggers
+one forced token refresh + retry. The OAuth web flow stays hand-rolled (the
+SDK's interactive login targets CLIs): tokens live in KV under
+`basecamp:tokens`, access tokens last 2 weeks and refresh lazily when <24h
+remain. The one-time bootstrap is `GET /auth?key=<SETUP_KEY>` → `/auth/callback`
+(CSRF state kept in KV). If KV ever loses the tokens, re-run that flow; the
+SETUP_KEY secret guards it.
+
+Workers-runtime quirk: the SDK loads its OpenAPI metadata via
+`createRequire(import.meta.url)`, which crashes in workerd. `wrangler.jsonc`
+aliases `node:module` to src/shims/node-module.ts, which inlines that JSON at
+build time. The `nodejs_compat` flag must stay enabled. If an SDK upgrade
+changes what it requires, the shim throws with the missing path — extend it there.
 
 Configuration split: Basecamp account/bucket/column IDs are plain vars in
 `wrangler.jsonc`; credentials (`BASECAMP_CLIENT_ID`, `BASECAMP_CLIENT_SECRET`,

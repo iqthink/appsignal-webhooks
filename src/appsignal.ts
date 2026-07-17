@@ -2,10 +2,7 @@
  * AppSignal webhook signature verification.
  *
  * AppSignal signs each request with SHA256(token + rawBody) and sends the hex
- * digest in the `X-Appsignal-Signature` header. The verification token lives in
- * each app's settings under App Settings > Integrations > Webhook verification
- * token, so with multiple apps pointing at this Worker we accept a
- * comma-separated list of tokens and match against any of them.
+ * digest in the `X-Appsignal-Signature` header.
  * https://docs.appsignal.com/application/integrations/webhooks.html
  */
 

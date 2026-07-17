@@ -23,6 +23,7 @@ app.post('/webhooks/appsignal', async (c) => {
     c.req.header('x-appsignal-signature'),
     c.env.APPSIGNAL_WEBHOOK_TOKENS
   )
+
   if (!valid) return c.text('Invalid signature', 401)
 
   let payload: AppSignalWebhookPayload

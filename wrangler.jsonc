@@ -3,14 +3,16 @@
   "name": "appsignal-webhooks",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-17",
+  "compatibility_flags": ["nodejs_compat"],
+  "alias": {
+    "node:module": "./src/shims/node-module.ts"
+  },
   "account_id": "1954c84eccd4790ee9e6c37d3ac7a656",
   "observability": {
     "enabled": true
   },
   "vars": {
     "BASECAMP_ACCOUNT_ID": "3081685",
-    "BASECAMP_BUCKET_ID": "43085835",
-    /* "Triage" column of the On Call card table (8852717470) */
     "BASECAMP_COLUMN_ID": "8852717471"
   },
   "kv_namespaces": [
