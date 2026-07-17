@@ -7,9 +7,8 @@ export type Bindings = {
 
   BASECAMP_CLIENT_ID: string
   BASECAMP_CLIENT_SECRET: string
-  /** Comma-separated list of AppSignal webhook verification tokens (one per app) */
+
   APPSIGNAL_WEBHOOK_TOKENS: string
-  /** Shared key that protects the one-time OAuth setup endpoints */
   SETUP_KEY: string
 }
 

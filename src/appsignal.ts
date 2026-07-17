@@ -1,17 +1,14 @@
 /**
  * AppSignal webhook signature verification.
  *
- * AppSignal signs each request with SHA256(token + rawBody) and sends the hex
- * digest in the `X-Appsignal-Signature` header. The verification token lives in
- * each app's settings under App Settings > Integrations > Webhook verification
- * token, so with multiple apps pointing at this Worker we accept a
- * comma-separated list of tokens and match against any of them.
+ * AppSignal signs each request with SHA256(token + rawBody) and
+ * sends the hex digest in the `X-Appsignal-Signature` header.
  * https://docs.appsignal.com/application/integrations/webhooks.html
  */
 
 async function sha256Hex(message: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message))
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -29,7 +26,7 @@ export async function verifySignature(
   if (!signature || !tokensCsv) return false
   const tokens = tokensCsv
     .split(',')
-    .map((t) => t.trim())
+    .map((token) => token.trim())
     .filter(Boolean)
 
   for (const token of tokens) {

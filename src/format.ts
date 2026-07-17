@@ -16,14 +16,14 @@ function escapeHtml(value: string): string {
 
 const MAX_BACKTRACE_LINES = 10
 
-export function cardTitle(ex: AppSignalException): string {
-  const site = ex.site ?? 'Unknown app'
-  const error = ex.exception ?? 'Error'
-  const where = ex.action ? ` in ${ex.action}` : ''
+export function cardTitle(exception: AppSignalException): string {
+  const site = exception.site ?? 'Unknown app'
+  const error = exception.exception ?? 'Error'
+  const where = exception.action ? ` in ${exception.action}` : ''
   return `🚨 [${site}] ${error}${where}`
 }
 
-export function cardContent(ex: AppSignalException): string {
+export function cardContent(exception: AppSignalException): string {
   const rows: string[] = []
   const row = (label: string, value: string | number | undefined) => {
     if (value !== undefined && value !== null && `${value}` !== '') {
@@ -31,26 +31,26 @@ export function cardContent(ex: AppSignalException): string {
     }
   }
 
-  row('Message', ex.message)
-  row('App', ex.site)
-  row('Environment', ex.environment)
-  row('Action', ex.action)
-  row('Namespace', ex.namespace)
-  row('Host', ex.hostname)
-  row('Revision', ex.revision)
-  row('User', ex.user)
-  row('Time', ex.time)
-  row('Incident #', ex.number)
+  row('Message', exception.message)
+  row('App', exception.site)
+  row('Environment', exception.environment)
+  row('Action', exception.action)
+  row('Namespace', exception.namespace)
+  row('Host', exception.hostname)
+  row('Revision', exception.revision)
+  row('User', exception.user)
+  row('Time', exception.time)
+  row('Incident #', exception.number)
 
-  if (ex.url) {
+  if (exception.url) {
     rows.push('<br>')
-    rows.push(`<div><a href="${escapeHtml(ex.url)}">View incident in AppSignal →</a></div>`)
+    rows.push(`<div><a href="${escapeHtml(exception.url)}">View incident in AppSignal →</a></div>`)
   }
 
-  const backtrace = ex.app_backtrace?.length
-    ? ex.app_backtrace
-    : ex.first_backtrace_line
-      ? [ex.first_backtrace_line]
+  const backtrace = exception.app_backtrace?.length
+    ? exception.app_backtrace
+    : exception.first_backtrace_line
+      ? [exception.first_backtrace_line]
       : []
   if (backtrace.length > 0) {
     const lines = backtrace.slice(0, MAX_BACKTRACE_LINES)

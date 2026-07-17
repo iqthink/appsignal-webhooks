@@ -9,14 +9,11 @@ import type { Bindings } from './types'
 const LAUNCHPAD = 'https://launchpad.37signals.com'
 const USER_AGENT = 'AppSignal Webhooks (ed@iqthink.com)'
 const TOKENS_KEY = 'basecamp:tokens'
-
-/** Refresh when the access token has less than a day left of its 2-week lifetime */
 const REFRESH_MARGIN_MS = 24 * 60 * 60 * 1000
 
 type StoredTokens = {
   access_token: string
   refresh_token: string
-  /** Unix ms timestamp when the access token expires */
   expires_at: number
 }
 
@@ -37,15 +34,15 @@ export function authorizationUrl(env: Bindings, redirectUri: string, state: stri
 }
 
 async function requestTokens(params: URLSearchParams): Promise<TokenResponse> {
-  const res = await fetch(`${LAUNCHPAD}/authorization/token`, {
+  const response = await fetch(`${LAUNCHPAD}/authorization/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': USER_AGENT },
     body: params,
   })
-  if (!res.ok) {
-    throw new Error(`Basecamp token request failed (${res.status}): ${await res.text()}`)
+  if (!response.ok) {
+    throw new Error(`Basecamp token request failed (${response.status}): ${await response.text()}`)
   }
-  return res.json()
+  return response.json()
 }
 
 async function storeTokens(env: Bindings, tokens: TokenResponse, previousRefreshToken?: string) {
@@ -85,13 +82,16 @@ async function refreshTokens(env: Bindings, current: StoredTokens) {
 
 async function getAccessToken(env: Bindings, forceRefresh = false): Promise<string> {
   const raw = await env.KV.get(TOKENS_KEY)
+
   if (!raw) {
     throw new Error('Basecamp is not authorized yet. Visit /auth?key=<SETUP_KEY> to connect.')
   }
+
   let tokens: StoredTokens = JSON.parse(raw)
   if (forceRefresh || Date.now() > tokens.expires_at - REFRESH_MARGIN_MS) {
     tokens = await refreshTokens(env, tokens)
   }
+
   return tokens.access_token
 }
 
@@ -118,12 +118,15 @@ export async function createCard(
       body: JSON.stringify(card),
     })
 
-  let res = await attempt(await getAccessToken(env))
-  if (res.status === 401) {
-    res = await attempt(await getAccessToken(env, true))
+  let response = await attempt(await getAccessToken(env))
+
+  if (response.status === 401) {
+    response = await attempt(await getAccessToken(env, true))
   }
-  if (!res.ok) {
-    throw new Error(`Basecamp card creation failed (${res.status}): ${await res.text()}`)
+
+  if (!response.ok) {
+    throw new Error(`Basecamp card creation failed (${response.status}): ${await response.text()}`)
   }
-  return res.json()
+
+  return response.json()
 }

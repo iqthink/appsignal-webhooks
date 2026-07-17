@@ -32,15 +32,15 @@ app.post('/webhooks/appsignal', async (c) => {
     return c.text('Invalid JSON', 400)
   }
 
-  const ex = payload.exception
-  if (!ex) return c.json({ ok: true, skipped: 'not an exception event' })
+  const exception = payload.exception
+  if (!exception) return c.json({ ok: true, skipped: 'not an exception event' })
 
-  const dedupeKey = `dedupe:${ex.site ?? 'unknown'}:${ex.environment ?? 'unknown'}:${ex.number ?? 'unknown'}`
+  const dedupeKey = `dedupe:${exception.site ?? 'unknown'}:${exception.environment ?? 'unknown'}:${exception.number ?? 'unknown'}`
   if (await c.env.KV.get(dedupeKey)) {
     return c.json({ ok: true, skipped: 'duplicate incident' })
   }
 
-  const card = await createCard(c.env, { title: cardTitle(ex), content: cardContent(ex) })
+  const card = await createCard(c.env, { title: cardTitle(exception), content: cardContent(exception) })
   await c.env.KV.put(dedupeKey, String(card.id), { expirationTtl: DEDUPE_TTL_SECONDS })
 
   return c.json({ ok: true, card: card.app_url })
@@ -75,9 +75,9 @@ app.get('/auth/callback', async (c) => {
   return c.text('✅ Basecamp authorized. Cards can now be created automatically.')
 })
 
-app.onError((err, c) => {
-  console.error('Unhandled error:', err.message)
-  return c.text(`Error: ${err.message}`, 502)
+app.onError((error, c) => {
+  console.error('Unhandled error:', error.message)
+  return c.text(`Error: ${error.message}`, 502)
 })
 
 export default app
