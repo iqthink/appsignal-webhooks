@@ -1,6 +1,7 @@
 {
   "name": "appsignal-webhooks",
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
