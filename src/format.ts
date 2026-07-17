@@ -31,20 +31,20 @@ export function cardContent(ex: AppSignalException): string {
     }
   }
 
-  row('Mensaje', ex.message)
+  row('Message', ex.message)
   row('App', ex.site)
-  row('Entorno', ex.environment)
-  row('Acción', ex.action)
+  row('Environment', ex.environment)
+  row('Action', ex.action)
   row('Namespace', ex.namespace)
   row('Host', ex.hostname)
-  row('Revisión', ex.revision)
-  row('Usuario', ex.user)
-  row('Fecha', ex.time)
-  row('Incidente #', ex.number)
+  row('Revision', ex.revision)
+  row('User', ex.user)
+  row('Time', ex.time)
+  row('Incident #', ex.number)
 
   if (ex.url) {
     rows.push('<br>')
-    rows.push(`<div><a href="${escapeHtml(ex.url)}">Ver incidente en AppSignal →</a></div>`)
+    rows.push(`<div><a href="${escapeHtml(ex.url)}">View incident in AppSignal →</a></div>`)
   }
 
   const backtrace = ex.app_backtrace?.length

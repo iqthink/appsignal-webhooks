@@ -72,7 +72,7 @@ app.get('/auth/callback', async (c) => {
   const redirectUri = new URL('/auth/callback', c.req.url).toString()
   await exchangeCode(c.env, code, redirectUri)
 
-  return c.text('✅ Basecamp autorizado. Ya se pueden crear cards automáticamente.')
+  return c.text('✅ Basecamp authorized. Cards can now be created automatically.')
 })
 
 app.onError((err, c) => {
